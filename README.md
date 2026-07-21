@@ -1,211 +1,185 @@
 # VeriRAG
 
-**A self-correcting document intelligence agent that knows the limits of its own evidence.**
+**A smart document Q&A system that refuses to make things up.**
 
 Built for the **OneInbox AI Internship Hackathon 2026** — AI Engineer track,
 Problem Statement 1: *Self-Correcting RAG Pipeline*.
 
+### 🔗 Live demo: **https://verirag.onrender.com**  ·  Console: **/app**
+
+> Hosted on a free tier, so the first visit may take ~50 seconds to wake up.
+> After that it's fast.
+
 ---
 
-## The problem
+## What problem does it solve?
 
-A conventional RAG pipeline has no concept of *not knowing*. It retrieves its
-top-k chunks whether or not anything relevant exists, hands them to a model
-trained above all to be helpful, and gets back a fluent, confidently-cited
-answer. When the evidence was thin, contradictory, or absent, that answer is a
-hallucination — and it is indistinguishable in tone from a correct one.
-
-This is why RAG is least deployable in exactly the domains where it is most
-valuable: legal, medical, financial, compliance, support. **A confident wrong
-answer is worse than no answer.**
+Normal RAG systems (document Q&A tools) have one big flaw: **they always give an
+answer** — even when the documents don't actually contain it. You get a
+confident, well-written, wrong answer that *looks* exactly like a correct one.
+That's a hallucination, and it's dangerous in areas like law, medicine, and
+finance, where **a confident wrong answer is worse than no answer at all.**
 
 ## What VeriRAG does differently
 
-VeriRAG treats answering as a privilege it must earn. Before it responds it
-grades the evidence it retrieved; after it responds it verifies its own output
-against the sources it cited. When the evidence doesn't support an answer, it
-takes one of three honest actions instead of inventing one:
+VeriRAG only answers when it can prove the answer is backed by the documents.
 
-- **Re-query** — reformulate the search and try again (bounded at 2 attempts)
-- **Clarify** — ask the user a targeted question when intent is ambiguous
-- **Abstain** — explicitly decline, with a low-confidence flag
+- **Before** answering, it checks: *is the evidence I found good enough?*
+- **After** answering, it checks: *does my answer actually match the sources?*
+
+If the evidence isn't good enough, it does one of three honest things instead of
+guessing:
+
+- **Search again** — rephrase the question and retry (max 2 times)
+- **Ask you to clarify** — when the question is unclear
+- **Say "I don't know"** — and clearly flag it as low-confidence
+
+Every answer also comes with a **confidence score, its sources, and a full
+step-by-step trace** of how it decided.
 
 ---
 
-## The agent loop
+## How it works (the agent loop)
 
 ```
-retrieve → grade_context
-   confidence ≥ 0.7                → generate → verify_faithfulness → END
-   0.4 ≤ confidence < 0.7
-        attempts < 2               → rewrite_query → retrieve  (loop)
-        attempts == 2              → clarify → END
-   confidence < 0.4                → abstain → END
+retrieve → grade the evidence
+   good enough       → write answer → check the answer is grounded → done
+   borderline        → rephrase & search again (up to 2 times) → else ask to clarify
+   not good enough   → say "I don't know"
 
-verify_faithfulness
-   grounded     → return the answer
-   not grounded → downgrade to abstain
+check answer:
+   backed by sources     → return it
+   not backed by sources → downgrade to "I don't know"
 ```
 
-**Two-stage anti-hallucination.** `grade_context` runs *before* generation and
-catches bad retrieval. `verify_faithfulness` runs *after* generation and catches
-the model inventing beyond good retrieval. Either alone leaves a hole.
+**Two safety checks, not one.** One check catches *bad search results* before
+answering. The other catches the model *making things up* after answering.
+Removing either one leaves a gap.
 
-**The grader is cross-checked.** An LLM judge alone can be confidently wrong, so
-its score is capped by a ceiling derived from the raw vector similarity of the
-best-matching chunk. This is what stops the grader rubber-stamping weak
-retrieval.
+**The grader can't cheat.** An AI judge alone can be confidently wrong, so its
+confidence is capped by the actual similarity score from the vector search. This
+stops it from approving weak results.
 
-**The loop is bounded.** Two re-query attempts maximum, plus a
-`recursion_limit` safety net. Guarantees termination; caps latency and cost.
+**The loop always stops.** At most 2 retries, plus a hard safety limit — so it
+can never loop forever, and cost/latency stay predictable.
 
 ---
 
 ## Results
 
-> Run `python eval/run_eval.py` to reproduce. Paste your measured numbers here.
+> Reproduce with `python eval/run_eval.py`. Numbers go here once measured.
 
-| Metric | Baseline RAG | VeriRAG |
+| Metric | Plain RAG | VeriRAG |
 |---|---:|---:|
-| Hallucination rate | _run eval_ | _run eval_ |
-| Correct abstentions | _run eval_ | _run eval_ |
-| Answerable questions answered | _run eval_ | _run eval_ |
+| Hallucination rate (lower is better) | _run eval_ | _run eval_ |
+| Correct "I don't know" answers | _run eval_ | _run eval_ |
+| Answerable questions actually answered | _run eval_ | _run eval_ |
 | Content accuracy | _run eval_ | _run eval_ |
 
-![comparison](eval/results/comparison.png)
-
-**Both** hallucination rate and abstention correctness are reported. Reporting
-only the first would let a system game the metric by refusing everything;
-reporting both proves the agent is *calibrated*, not merely evasive.
+We report **both** the hallucination rate **and** how often it correctly says
+"I don't know". Reporting only the first would let a system cheat by refusing
+everything — reporting both proves it's genuinely balanced.
 
 ---
 
-## Architecture
+## Tech stack (and why)
 
-```
-Web UI ── FastAPI ──┬── /api/ingest ──► background worker
-                    │                     loader (pdfplumber │ Tesseract OCR)
-                    │                       → clean → chunk → fastembed
-                    │                       → Qdrant
-                    │
-                    └── /api/query  ──► LangGraph agent (7 nodes)
-                                          ↕ Qdrant · Redis · LLM
-```
+| Part | Tool | Why |
+|---|---|---|
+| Agent brain | **LangGraph** | Lets the system loop, branch, and remember state — that's what makes it an *agent*, not a fixed pipeline |
+| Language model | **Groq / Gemini / Ollama** | Swap with one setting. All free; Ollama runs fully offline as backup |
+| Embeddings | **fastembed** (local) | Runs on your machine — no cost, no rate limits |
+| Vector search | **Qdrant** | Open-source; its similarity scores are used to fact-check the grader |
+| Reading scans | **Tesseract OCR** + pdfplumber | Pulls text out of scanned images and messy PDFs |
+| API | **FastAPI** | Fast, typed, handles many requests at once |
+| Background jobs | **Celery + Redis** | Ingests documents without blocking the app |
+| Packaging | **Docker** | The whole thing starts with one command |
 
-| Layer | Technology |
-|---|---|
-| Agent orchestration | LangGraph |
-| LLM | Gemini 2.0 Flash · Groq Llama 3.3 · Ollama (all free / local) |
-| Embeddings | fastembed — BAAI/bge-small-en-v1.5 (local) |
-| Vector store | Qdrant |
-| OCR / parsing | Tesseract, pdfplumber, pdf2image |
-| Async | Celery + Redis |
-| API | FastAPI + Pydantic |
-| Infra | Docker Compose |
-
-**Total API cost: ₹0.** Embeddings run locally; all LLM calls target free
-tiers. Ollama provides a fully offline path so the live demo cannot be broken
-by venue connectivity.
+**Total API cost: ₹0.** Embeddings run locally and all LLM calls use free tiers.
 
 ---
 
-## Quickstart
+## Run it yourself
+
+You need **Docker Desktop** and a free LLM key
+([Groq](https://console.groq.com/keys) or [Gemini](https://aistudio.google.com/apikey)).
 
 ```bash
-# 1. Free Gemini key: https://aistudio.google.com/apikey
-cp .env.example .env          # set GEMINI_API_KEY
+# 1. Configure
+cp .env.example .env
+#    then set in .env:  LLM_PROVIDER=groq  and  GROQ_API_KEY=gsk_...
 
-# 2. Generate the messy demo corpus
-make corpus
+# 2. Start everything (API + worker + Qdrant + Redis)
+docker compose up --build -d
 
-# 3. Start the stack
-make up                       # qdrant + redis + api + worker
-
-# 4. Ingest
-make seed
-
-# 5. Open http://localhost:8000
-
-# 6. Reproduce the headline number
-make eval
+# 3. Load the demo documents
+curl -X POST http://localhost:8001/api/ingest/seed
 ```
 
-Tests need no key and no services:
+Open it:
+- Landing page → **http://localhost:8001/**
+- Console → **http://localhost:8001/app**
+
+Run the tests (no key or services needed):
 
 ```bash
-make test
+pytest -q
 ```
+
+See [DEPLOY.md](DEPLOY.md) for putting it online (free) on Render.
 
 ---
 
-## The demo corpus is engineered
+## Try these four questions
 
-`scripts/generate_corpus.py` builds three documents with deliberately planted
-properties, so every agent behaviour is demonstrable:
+The demo documents are built on purpose so each behaviour is easy to show:
 
-| Planted property | Proves |
-|---|---|
-| Clean native-text policy PDF | Normal answering |
-| Deployment-freeze details **only inside a scanned image** | The OCR path genuinely works |
-| Notice period: **60 days** in the handbook vs **30 days** in the addendum | Contradiction detection |
-| Contractor leave left underspecified | Clarification behaviour |
-| No salary / address / insurance data anywhere | Honest abstention |
+| Ask this | What happens | Why it matters |
+|---|---|---|
+| *How many casual leave days do full-time employees get?* | **Answers** with a citation | Normal, correct answering |
+| *When does the production deployment freeze apply?* | **Answers from a scanned image** | The OCR pipeline works |
+| *What is the notice period when resigning?* | **Flags a contradiction** (60 vs 30 days) | Catches conflicting sources |
+| *What is the CEO's home address?* | **Says "I don't know"** | Refuses to invent an answer |
 
-Try these four in the UI, in order:
-
-1. *"How many casual leave days do full-time employees get?"* → answers
-2. *"When does the production deployment freeze apply?"* → answers **from the image**
-3. *"What is the notice period when resigning?"* → flags the **contradiction**
-4. *"What is the CEO's home address?"* → **abstains**
+Open the **decision trace** under any answer to see the confidence score,
+reasoning, and the path it took.
 
 ---
 
 ## API
 
-| Endpoint | Purpose |
+| Endpoint | What it does |
 |---|---|
-| `GET /api/health` | Status, indexed chunk count, active thresholds |
-| `POST /api/ingest` | Upload documents (processed off the request path) |
-| `GET /api/status/{task_id}` | Ingestion progress |
-| `POST /api/ingest/seed` | Ingest everything in `data/raw` |
-| `POST /api/query` | Run the agent |
-| `DELETE /api/index` | Reset the vector store |
+| `GET /api/health` | Status, indexed chunk count, current settings |
+| `POST /api/ingest` | Upload documents (processed in the background) |
+| `GET /api/status/{task_id}` | Check ingestion progress |
+| `POST /api/ingest/seed` | Load everything in `data/raw` |
+| `POST /api/query` | Ask the agent a question |
+| `DELETE /api/index` | Clear the vector store |
 
-`POST /api/query` returns the answer plus `status`, `confidence`, `attempts`,
-`contradiction`, `sources`, and the full **decision trace** — every node the
-agent executed and why.
-
----
-
-## Design decisions
-
-**No web-search fallback.** The honesty guarantee is scoped to the provided
-corpus. Reaching outside it would reintroduce ungrounded answers and evade the
-point of the challenge.
-
-**Fail safe means abstain.** Missing confidence, zero documents retrieved,
-Qdrant unreachable, verifier unsure — all resolve to abstention. The system
-never answers by default.
-
-**Routing logic is dependency-free.** `app/graph/routing.py` imports nothing but
-config, so the most safety-critical decision in the system is pure and
-trivially unit-testable.
-
-**Structure-aware chunking.** Tables are kept atomic and paragraph boundaries
-respected, because fragmented context reads as *insufficient* to the grader and
-needlessly triggers the correction loop.
+`POST /api/query` returns the answer plus its `status`, `confidence`,
+`attempts`, `contradiction` flag, `sources`, and the full **decision trace**.
 
 ---
 
-## Known limitations
+## Design choices (deliberate)
 
-- Very low-resolution scans still defeat OCR; those documents are marked
-  `flagged_for_review` rather than silently indexed as noise.
-- The self-correction loop increases tail latency — a re-query roughly doubles
-  time-to-answer. This is the deliberate trade for not hallucinating.
-- Grader thresholds are tuned on a 12-question golden set; a production
-  deployment would want a substantially larger calibration set.
-- Multi-hop questions spanning more than two documents remain the weakest case.
+- **No internet search.** It only uses the provided documents. Letting it search
+  the web would bring back ungrounded answers — the exact thing we're avoiding.
+- **When unsure, it abstains.** No confidence, no documents, database down,
+  verifier unsure → it says "I don't know". It never answers by default.
+- **The decision logic is dependency-free** (`app/graph/routing.py`), so the most
+  important safety logic is simple and fully unit-tested.
+
+---
+
+## Known limits
+
+- Very blurry scans can still defeat OCR — those get flagged, not silently
+  indexed as garbage.
+- Retrying makes some answers slower — a fair trade for not hallucinating.
+- Thresholds are tuned on 12 questions; a real product would use many more.
+- Questions that span three or more documents are the weakest case.
 
 ---
 
@@ -213,24 +187,16 @@ needlessly triggers the correction loop.
 
 ```
 app/
-  config.py            settings + agent thresholds
-  graph/
-    routing.py         the decision function (pure, tested)
-    nodes.py           the seven agent nodes
-    build.py           LangGraph wiring + run_agent()
-    prompts.py         all LLM prompts
-    state.py           AgentState
-  llm/                 Gemini / Groq / Ollama behind one interface
-  ingestion/           loader (OCR) → clean → chunk → service → celery
+  config.py            settings + thresholds
+  graph/               the agent: routing, nodes, build, prompts, state
+  llm/                 Groq / Gemini / Ollama behind one interface
+  ingestion/           read (OCR) → clean → chunk → embed → store
   retrieval/           fastembed + Qdrant
   api/                 routes + schemas
-eval/
-  run_eval.py          baseline vs agent — the headline experiment
-  scorer.py            hallucination + abstention scoring
-  baseline_rag.py      the control group
-data/golden/qa.yaml    the 12 golden questions
-scripts/               corpus generator
-web/index.html         UI with confidence bars and decision trace
+eval/                  baseline vs VeriRAG comparison + scoring
+data/golden/qa.yaml    the 12 test questions
+web/index.html         landing page
+web/app.html           the console (ask box, upload, decision trace)
 ```
 
 ---
