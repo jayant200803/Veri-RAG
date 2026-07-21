@@ -20,7 +20,26 @@ Most reliable, zero cost, and works fully offline if `LLM_PROVIDER=ollama`.
 
 ---
 
-## B. Public URL — Hugging Face Spaces (free, Docker)
+## B. Public URL — Render (free, Docker)
+
+Render reads `render.yaml` and deploys a single Docker web service. Qdrant runs
+embedded, ingestion runs in-process, and the corpus auto-seeds on boot.
+
+1. Sign up at https://render.com (log in with GitHub).
+2. **New + -> Blueprint**, select the `jayant200803/Veri-RAG` repo. Render finds
+   `render.yaml` and shows the `verirag` service.
+3. When prompted, set the secret **`GROQ_API_KEY`** to your `gsk_...` key.
+4. Click **Apply** / **Create**. Render builds the Dockerfile and deploys.
+5. Public URL appears at the top: `https://verirag.onrender.com` (or similar).
+   Landing = that URL, console = that URL + `/app`.
+
+Notes:
+- Free instances **sleep after ~15 min idle**; the first request then takes
+  ~50 s to wake. Open the URL a minute before the demo to warm it up.
+- Free tier is 512 MB RAM. If the build OOMs on model load, the fallback is a
+  free Hugging Face Space (16 GB) - see below.
+
+## C. Public URL — Hugging Face Spaces (free, Docker)
 
 The app collapses to a **single container** for the cloud: Qdrant runs embedded
 in-process, ingestion runs in-process (no Redis/Celery), and the demo corpus is
