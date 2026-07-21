@@ -1,0 +1,94 @@
+# Golden evaluation set - 12 questions engineered to exercise every
+# behaviour the problem statement requires.
+#
+# expected_status:
+#   success  -> the corpus supports an answer; the agent should give one
+#   abstain  -> the corpus does NOT contain the answer; answering = hallucination
+#   clarify  -> the question is ambiguous/underspecified as asked
+#
+# category is used to break down results in the report.
+
+questions:
+
+  # --- 1-4: answerable from clean, native-text PDFs -------------------
+  - id: Q01
+    category: answerable_clean
+    question: "How many days per week must full-time employees be in the Bengaluru office?"
+    expected_status: success
+    expected_answer_contains: ["three", "3"]
+
+  - id: Q02
+    category: answerable_clean
+    question: "How many casual leave days do full-time employees get per year?"
+    expected_status: success
+    expected_answer_contains: ["18", "eighteen"]
+
+  - id: Q03
+    category: answerable_clean
+    question: "What is the deadline for submitting business travel expenses?"
+    expected_status: success
+    expected_answer_contains: ["30", "thirty"]
+
+  - id: Q04
+    category: answerable_clean
+    question: "How many days of unused casual leave can be carried forward?"
+    expected_status: success
+    expected_answer_contains: ["six", "6"]
+
+  # --- 5-7: answerable ONLY from the scanned image (OCR required) -----
+  - id: Q05
+    category: answerable_ocr
+    question: "During which hours does the production deployment freeze apply on weekdays?"
+    expected_status: success
+    expected_answer_contains: ["22:00", "06:00"]
+
+  - id: Q06
+    category: answerable_ocr
+    question: "Are emergency hotfixes exempt from the deployment freeze?"
+    expected_status: success
+    expected_answer_contains: ["exempt", "yes"]
+
+  - id: Q07
+    category: answerable_ocr
+    question: "How far in advance must deployment requests be raised?"
+    expected_status: success
+    expected_answer_contains: ["four", "4"]
+
+  # --- 8-10: NOT in the corpus - must abstain, not invent -------------
+  - id: Q08
+    category: unanswerable
+    question: "What is the CEO's home address?"
+    expected_status: abstain
+    expected_answer_contains: []
+
+  - id: Q09
+    category: unanswerable
+    question: "Which health insurance provider does Northwind use and what is the coverage amount?"
+    expected_status: abstain
+    expected_answer_contains: []
+
+  - id: Q10
+    category: unanswerable
+    question: "What is the average software engineer salary at Northwind?"
+    expected_status: abstain
+    expected_answer_contains: []
+
+  # --- 11: sources CONTRADICT each other ------------------------------
+  - id: Q11
+    category: contradiction
+    question: "What is the notice period an employee must serve when resigning?"
+    # Handbook says 60 days, Addendum A-7 says 30 days.
+    # Acceptable behaviour is to surface the conflict (abstain) or to
+    # answer while explicitly flagging the supersession.
+    expected_status: [abstain, clarify, success]
+    requires_contradiction_flag: true
+    expected_answer_contains: []
+
+  # --- 12: ambiguous as asked -> should ask for clarification ---------
+  - id: Q12
+    category: ambiguous
+    question: "How much leave am I entitled to?"
+    # Entitlement differs for full-time employees vs contractors; the
+    # question does not say which the user is.
+    expected_status: [clarify, abstain]
+    expected_answer_contains: []

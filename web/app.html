@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>VeriRAG · Console</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>"/>
+<style>
+  :root{
+    --bg:#050510; --panel:rgba(18,18,36,.72); --panel2:rgba(7,7,20,.6); --panel-solid:#12122a;
+    --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.15);
+    --txt:#ececfb; --muted:#9a9ab8; --dim:#5f5f7c;
+    --violet:#8b5cf6; --violet2:#a78bfa; --indigo:#6366f1; --cyan:#22d3ee;
+    --emerald:#10b981; --amber:#f59e0b; --rose:#f43f5e;
+    --shadow:0 24px 70px -24px rgba(0,0,0,.8);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);min-height:100vh;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55;overflow-x:hidden}
+  .aurora{position:fixed;inset:0;z-index:-2;overflow:hidden;background:radial-gradient(ellipse at 50% -10%,#101028 0%,var(--bg) 60%)}
+  .aurora span{position:absolute;border-radius:50%;filter:blur(100px);opacity:.4;animation:float 26s ease-in-out infinite}
+  .aurora span:nth-child(1){width:50vw;height:50vw;background:radial-gradient(circle,#7c3aed,transparent 60%);top:-18vw;left:-8vw}
+  .aurora span:nth-child(2){width:45vw;height:45vw;background:radial-gradient(circle,#0891b2,transparent 60%);bottom:-18vw;right:-8vw;animation-delay:-10s}
+  @keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(3vw,3vw) scale(1.12)}}
+  .grid{position:fixed;inset:0;z-index:-1;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(ellipse at 50% 0%,#000,transparent 60%);opacity:.4}
+  .wrap{max-width:960px;margin:0 auto;padding:0 22px}
+
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);background:rgba(5,5,16,.6);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.02em;text-decoration:none;color:var(--txt)}
+  .brand .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--violet),var(--indigo));display:grid;place-items:center;font-size:16px;box-shadow:0 6px 18px -6px var(--violet)}
+  .back{font-size:.8rem;color:var(--muted);text-decoration:none}.back:hover{color:var(--txt)}
+  .nav-pills{display:flex;gap:8px;font-size:.73rem;color:var(--muted)}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid var(--line2);border-radius:999px;background:rgba(255,255,255,.03);white-space:nowrap}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+  .dot.live{background:var(--emerald);box-shadow:0 0 8px var(--emerald);animation:blink 1.8s infinite}
+  @keyframes blink{50%{opacity:.4}}
+
+  .head{padding:34px 0 6px}
+  .head h1{font-size:1.8rem;letter-spacing:-.02em;font-weight:800}
+  .head p{color:var(--muted);margin-top:6px;font-size:.95rem}
+
+  .console{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:24px;backdrop-filter:blur(12px);box-shadow:var(--shadow);margin-top:22px}
+  .askrow{display:flex;gap:10px}
+  #q{flex:1;background:var(--panel2);border:1px solid var(--line2);border-radius:13px;padding:15px 18px;color:var(--txt);font:inherit;font-size:1rem;outline:none;transition:.18s}
+  #q:focus{border-color:var(--violet);box-shadow:0 0 0 4px rgba(139,92,246,.14)}
+  #q::placeholder{color:var(--dim)}
+  .btn{border:none;cursor:pointer;font:inherit;font-weight:650;border-radius:13px;transition:.18s;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:linear-gradient(135deg,var(--violet),var(--indigo));color:#fff;padding:0 24px;font-size:.98rem;box-shadow:0 10px 30px -10px var(--violet)}
+  .btn-primary:hover{transform:translateY(-2px)}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .chip{font-size:.78rem;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid var(--line);padding:7px 13px;border-radius:999px;cursor:pointer;transition:.15s}
+  .chip:hover{color:var(--txt);border-color:var(--violet);background:rgba(139,92,246,.1)}
+  .chip .em{margin-right:6px}
+
+  .drop{margin-top:16px;border:1.6px dashed var(--line2);border-radius:14px;padding:20px;text-align:center;cursor:pointer;transition:.18s;background:rgba(255,255,255,.015)}
+  .drop:hover,.drop.over{border-color:var(--violet);background:rgba(139,92,246,.07)}
+  .drop .di{font-size:1.5rem}
+  .drop p{font-size:.86rem;color:var(--muted);margin-top:6px}
+  .drop small{color:var(--dim);font-size:.74rem}
+  .up-list{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .up-item{display:flex;align-items:center;gap:10px;font-size:.82rem;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 13px}
+  .up-item .fn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .up-state{font-size:.72rem;font-weight:700}
+  .spin{width:14px;height:14px;border:2px solid var(--line2);border-top-color:var(--violet);border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  #out{margin-top:22px;display:flex;flex-direction:column;gap:18px}
+  .thinking{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.9rem;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+
+  /* result card */
+  .card{border:1px solid var(--line2);border-radius:20px;background:var(--panel);backdrop-filter:blur(12px);overflow:hidden;animation:rise .4s cubic-bezier(.2,.8,.2,1)}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .verdict{display:flex;align-items:center;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .verdict .vico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;flex-shrink:0}
+  .verdict .vtxt{flex:1}
+  .verdict .vlabel{font-size:.95rem;font-weight:800;letter-spacing:.02em}
+  .verdict .vmeta{font-size:.74rem;color:var(--dim);margin-top:2px;display:flex;gap:12px;flex-wrap:wrap}
+  .verdict .warn{color:var(--amber);font-weight:700}
+  .verdict .ok{color:var(--emerald)}
+  /* gauge */
+  .gauge{position:relative;width:58px;height:58px;flex-shrink:0}
+  .gauge svg{transform:rotate(-90deg)}
+  .gauge .num{position:absolute;inset:0;display:grid;place-items:center;font-size:.82rem;font-weight:800}
+  .s-success .vico{background:rgba(16,185,129,.15)} .s-success .vlabel{color:var(--emerald)}
+  .s-clarify .vico{background:rgba(245,158,11,.15)} .s-clarify .vlabel{color:var(--amber)}
+  .s-abstain .vico{background:rgba(244,63,94,.15)} .s-abstain .vlabel{color:var(--rose)}
+  .s-error   .vico{background:rgba(244,63,94,.15)} .s-error .vlabel{color:var(--rose)}
+
+  .body{padding:20px 22px}
+  .qshow{font-size:.78rem;color:var(--dim);margin-bottom:10px}
+  .answer{font-size:1.05rem;line-height:1.65;white-space:pre-wrap}
+  .reason{margin-top:14px;font-size:.84rem;color:var(--muted);font-style:italic;border-left:2px solid var(--line2);padding-left:12px}
+
+  details{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+  summary{cursor:pointer;font-size:.8rem;color:var(--muted);list-style:none;user-select:none;display:flex;align-items:center;gap:7px;font-weight:600}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸";color:var(--dim);transition:.15s}
+  details[open] summary::before{transform:rotate(90deg)}
+
+  .src{font-size:.8rem;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-top:10px}
+  .src .top{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .src .name{color:var(--violet2);font-weight:600}
+  .src .mut{color:var(--dim)}
+  .src .ocr{color:var(--cyan);font-size:.66rem;font-weight:700;border:1px solid rgba(34,211,238,.35);padding:1px 6px;border-radius:5px}
+  .src .relbar{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:.68rem;color:var(--dim)}
+  .src .relbar .b{width:60px;height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+  .src .relbar .b>i{display:block;height:100%;background:linear-gradient(90deg,var(--indigo),var(--cyan))}
+  .src .ex{color:var(--muted);margin-top:9px;line-height:1.5;font-size:.78rem}
+
+  /* timeline trace */
+  .tl{margin-top:12px;position:relative;padding-left:26px}
+  .tl::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--violet),transparent)}
+  .tl-item{position:relative;padding:0 0 16px}
+  .tl-item:last-child{padding-bottom:0}
+  .tl-item .node-dot{position:absolute;left:-24px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--panel-solid);border:2px solid var(--violet);box-shadow:0 0 0 4px rgba(139,92,246,.1)}
+  .tl-item .nname{font-size:.85rem;font-weight:700;color:var(--violet2)}
+  .tl-item .ndata{margin-top:5px;display:flex;flex-wrap:wrap;gap:6px}
+  .kv{font-size:.7rem;font-family:ui-monospace,Menlo,monospace;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--muted)}
+  .kv b{color:var(--txt);font-weight:600}
+
+  #toast{position:fixed;bottom:24px;right:24px;z-index:100;display:flex;flex-direction:column;gap:10px}
+  .toast{background:var(--panel-solid);border:1px solid var(--line2);border-left:3px solid var(--violet);border-radius:11px;padding:13px 16px;font-size:.85rem;min-width:230px;box-shadow:var(--shadow);animation:rise .3s ease}
+  .toast.ok{border-left-color:var(--emerald)} .toast.err{border-left-color:var(--rose)}
+  .toast b{display:block;font-size:.8rem;margin-bottom:2px}
+  .toast span{color:var(--muted);font-size:.78rem}
+
+  footer{text-align:center;padding:44px 0 34px;color:var(--dim);font-size:.8rem}
+  @media(max-width:640px){.nav-pills .pill.hideable{display:none}}
+</style>
+</head>
+<body>
+<div class="aurora"><span></span><span></span></div><div class="grid"></div>
+
+<nav>
+  <div class="wrap nav-in">
+    <a class="brand" href="/"><span class="logo">🛡️</span> VeriRAG</a>
+    <div class="nav-pills">
+      <span class="pill"><span id="hdot" class="dot"></span><span id="hprovider">connecting…</span></span>
+      <span class="pill hideable"><span id="hchunks">–</span>&nbsp;chunks</span>
+      <a class="back" href="/">← landing</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="head">
+    <h1>Ask the corpus anything</h1>
+    <p>Try an answerable question, a contradictory one, or something the docs don't contain — then open the decision trace.</p>
+  </div>
+
+  <div class="console">
+    <div class="askrow">
+      <input id="q" placeholder="e.g. How many casual leave days do full-time employees get?" autocomplete="off"/>
+      <button class="btn btn-primary" id="ask">Ask →</button>
+    </div>
+    <div class="chips" id="chips">
+      <span class="chip" data-q="How many casual leave days do full-time employees get?"><span class="em">✅</span>Answerable</span>
+      <span class="chip" data-q="When does the production deployment freeze apply?"><span class="em">🖼️</span>OCR image</span>
+      <span class="chip" data-q="What is the notice period when resigning?"><span class="em">⚠️</span>Contradiction</span>
+      <span class="chip" data-q="How many casual leave days do contractors get?"><span class="em">❓</span>Ambiguous</span>
+      <span class="chip" data-q="What is the CEO's home address?"><span class="em">🛑</span>Not in docs</span>
+    </div>
+
+    <div class="drop" id="drop">
+      <div class="di">📄⬆️</div>
+      <p><b>Add your own documents</b> — drop PDFs or images here, or click to browse</p>
+      <small>Scanned files are run through OCR automatically · indexed in seconds</small>
+      <input type="file" id="file" multiple accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.webp" hidden/>
+    </div>
+    <div class="up-list" id="uplist"></div>
+
+    <div id="out"></div>
+  </div>
+
+  <footer>Closed-domain by design — no web fallback. Fails safe by abstaining.</footer>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const VERDICT = {
+  success:{cls:"s-success",ico:"✅",label:"ANSWERED",color:"#10b981"},
+  clarify:{cls:"s-clarify",ico:"❓",label:"NEEDS CLARIFICATION",color:"#f59e0b"},
+  abstain:{cls:"s-abstain",ico:"🛑",label:"ABSTAINED — LOW CONFIDENCE",color:"#f43f5e"},
+};
+const esc=s=>(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const $=id=>document.getElementById(id);
+
+function toast(t,m,k=""){const e=document.createElement("div");e.className="toast "+k;e.innerHTML=`<b>${esc(t)}</b><span>${esc(m)}</span>`;$("toast").appendChild(e);setTimeout(()=>{e.style.opacity="0";e.style.transition="opacity .4s";setTimeout(()=>e.remove(),400);},3600);}
+
+async function health(){
+  try{
+    const h=await(await fetch("/api/health")).json();
+    $("hdot").className="dot live";
+    $("hprovider").textContent="provider: "+h.llm_provider;
+    $("hchunks").textContent=h.chunks_indexed;
+  }catch(e){$("hprovider").textContent="API unreachable";}
+}
+
+function gauge(pct,color){
+  const r=24,c=2*Math.PI*r,off=c*(1-pct/100);
+  return `<div class="gauge">
+    <svg width="58" height="58"><circle cx="29" cy="29" r="${r}" stroke="rgba(255,255,255,.08)" stroke-width="6" fill="none"/>
+    <circle cx="29" cy="29" r="${r}" stroke="${color}" stroke-width="6" fill="none" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${c}" style="transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)"
+      class="gring"/></svg>
+    <div class="num">${pct}%</div></div>`;
+}
+
+function srcHTML(sources){
+  return (sources||[]).map(s=>{
+    const rel=Math.round((s.score||0)*100);
+    return `<div class="src">
+      <div class="top">
+        <span class="name">${esc(s.source)}</span>
+        <span class="mut">· page ${esc(String(s.page))}</span>
+        ${s.extraction==="ocr"?`<span class="ocr">OCR</span>`:s.extraction?`<span class="mut">· ${esc(s.extraction)}</span>`:""}
+        <span class="relbar">relevance <span class="b"><i style="width:${rel}%"></i></span> ${esc(String(s.score))}</span>
+      </div>
+      ${s.excerpt?`<div class="ex">${esc(s.excerpt)}</div>`:""}
+    </div>`;}).join("");
+}
+function traceHTML(trace){
+  return (trace||[]).map(t=>{
+    const kvs=Object.entries(t).filter(([k])=>k!=="node")
+      .map(([k,v])=>`<span class="kv">${esc(k)} <b>${esc(typeof v==="object"?JSON.stringify(v):String(v))}</b></span>`).join("");
+    return `<div class="tl-item"><span class="node-dot"></span><div class="nname">${esc(t.node)}</div><div class="ndata">${kvs}</div></div>`;
+  }).join("");
+}
+
+function render(d){
+  const v=VERDICT[d.status]||{cls:"s-error",ico:"⚠",label:(d.status||"").toUpperCase(),color:"#f43f5e"};
+  const pct=Math.round((d.confidence||0)*100);
+  const sources=srcHTML(d.sources),trace=traceHTML(d.trace);
+  return `<div class="card ${v.cls}">
+    <div class="verdict">
+      <div class="vico">${v.ico}</div>
+      <div class="vtxt">
+        <div class="vlabel">${v.label}</div>
+        <div class="vmeta">
+          <span>${d.attempts} re-quer${d.attempts===1?"y":"ies"}</span>
+          <span>${d.latency_ms} ms</span>
+          ${d.faithful?`<span class="ok">✔ grounded</span>`:""}
+          ${d.contradiction?`<span class="warn">⚠ contradiction detected</span>`:""}
+        </div>
+      </div>
+      ${gauge(pct,v.color)}
+    </div>
+    <div class="body">
+      <div class="qshow">Q: ${esc(d.question||"")}</div>
+      <div class="answer">${esc(d.answer)}</div>
+      ${d.reasoning?`<div class="reason">${esc(d.reasoning)}</div>`:""}
+      ${sources?`<details><summary>sources (${(d.sources||[]).length})</summary>${sources}</details>`:""}
+      ${trace?`<details open><summary>decision trace (${(d.trace||[]).length} steps)</summary><div class="tl">${trace}</div></details>`:""}
+    </div>
+  </div>`;
+}
+
+async function ask(){
+  const q=$("q").value.trim(); if(!q) return;
+  const out=$("out");
+  out.insertAdjacentHTML("afterbegin",`<div class="thinking"><span class="spin"></span> agent is retrieving and grading evidence…</div>`);
+  try{
+    const r=await fetch("/api/query",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q,include_trace:true})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||"request failed");
+    out.querySelector(".thinking")?.remove();
+    out.insertAdjacentHTML("afterbegin",render(d));
+    // animate gauge
+    requestAnimationFrame(()=>{const g=out.querySelector(".card .gring");if(g){const r=24,c=2*Math.PI*r;const pct=Math.round((d.confidence||0)*100);g.style.strokeDashoffset=c*(1-pct/100);}});
+  }catch(e){
+    out.querySelector(".thinking")?.remove();
+    out.insertAdjacentHTML("afterbegin",`<div class="card s-error"><div class="verdict"><div class="vico">⚠</div><div class="vtxt"><div class="vlabel">REQUEST FAILED</div></div></div><div class="body"><div class="answer" style="font-size:.9rem">${esc(e.message)}</div></div></div>`);
+  }
+}
+
+/* upload */
+async function upload(files){
+  if(!files||!files.length) return;
+  const list=$("uplist"),names=[...files].map(f=>f.name).join(", ");
+  const row=document.createElement("div");row.className="up-item";
+  row.innerHTML=`<span class="spin"></span><span class="fn">${esc(names)}</span><span class="up-state" style="color:var(--amber)">uploading…</span>`;
+  list.prepend(row);
+  try{
+    const fd=new FormData();[...files].forEach(f=>fd.append("files",f));
+    const r=await fetch("/api/ingest",{method:"POST",body:fd});
+    const d=await r.json(); if(!r.ok) throw new Error(d.detail||"upload failed");
+    row.querySelector(".up-state").textContent="ingesting…";
+    const done=await poll(d.task_id);
+    row.querySelector(".spin").outerHTML="✅";
+    const chunks=(done.results||[]).reduce((a,x)=>a+(x.chunks||0),0);
+    const ocr=(done.results||[]).some(x=>x.ocr_pages>0);
+    const st=row.querySelector(".up-state");st.textContent=`indexed · ${chunks} chunks${ocr?" · OCR":""}`;st.style.color="var(--emerald)";
+    toast("Document indexed",`${chunks} new chunks searchable${ocr?" (OCR used)":""}.`,"ok");health();
+  }catch(e){
+    row.querySelector(".spin").outerHTML="❌";
+    const st=row.querySelector(".up-state");st.textContent="failed";st.style.color="var(--rose)";
+    toast("Upload failed",e.message,"err");
+  }
+}
+async function poll(id){
+  for(let i=0;i<90;i++){await new Promise(r=>setTimeout(r,1000));
+    const j=await(await fetch("/api/status/"+id)).json();
+    if(j.status==="completed")return j; if(j.status==="failed")throw new Error("ingestion failed");}
+  throw new Error("ingestion timed out");
+}
+
+$("ask").onclick=ask;
+$("q").addEventListener("keydown",e=>{if(e.key==="Enter")ask();});
+$("chips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("q").value=c.dataset.q;ask();});
+const drop=$("drop"),file=$("file");
+drop.onclick=()=>file.click();
+file.onchange=()=>{upload(file.files);file.value="";};
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop",e=>upload(e.dataTransfer.files));
+
+// prefill from ?q=
+const pq=new URLSearchParams(location.search).get("q");
+if(pq){$("q").value=pq;ask();}
+health();setInterval(health,15000);
+</script>
+</body>
+</html>

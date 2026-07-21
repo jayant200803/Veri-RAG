@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+*.egg-info/
+eval/results/*.json
+eval/results/*.png
+qdrant_storage/
+.DS_Store
+
+# local-only project notes (not part of the product)
+VeriRAG_Demo_Guide.pdf
+scripts/make_demo_guide.py
+
+# personal file - do not publish
+data/raw/JAYANT_RESUME.pdf
