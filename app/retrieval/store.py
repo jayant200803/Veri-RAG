@@ -20,7 +20,14 @@ class VectorStore:
     def __init__(self) -> None:
         from qdrant_client import QdrantClient
 
-        self._client = QdrantClient(url=settings.qdrant_url, timeout=30)
+        # Server mode (local Docker) when a URL is set; otherwise run Qdrant
+        # embedded in-process for single-container / serverless deploys.
+        if settings.qdrant_url:
+            self._client = QdrantClient(url=settings.qdrant_url, timeout=30)
+        elif settings.qdrant_path:
+            self._client = QdrantClient(path=settings.qdrant_path)
+        else:
+            self._client = QdrantClient(location=":memory:")
         self.collection = settings.qdrant_collection
 
     # ------------------------------------------------------------------

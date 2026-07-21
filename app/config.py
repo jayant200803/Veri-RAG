@@ -19,8 +19,16 @@ class Settings(BaseSettings):
     ollama_model: str = "llama3.1:8b"
 
     # --- Vector store ---
+    # qdrant_url empty -> run Qdrant embedded in-process (single-container /
+    # serverless deploys). Set to a URL for the standalone server (local Docker).
     qdrant_url: str = "http://localhost:6333"
+    qdrant_path: str = ""                    # on-disk embedded path; empty -> in-memory
     qdrant_collection: str = "verirag_docs"
+
+    # --- Deploy convenience ---
+    # When true, ingest data/raw on startup if the index is empty. Used for
+    # ephemeral cloud hosts so the public demo always has the corpus.
+    auto_seed: bool = False
 
     # --- Redis ---
     redis_url: str = "redis://localhost:6379/0"

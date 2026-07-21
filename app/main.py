@@ -50,7 +50,19 @@ if WEB_DIR.exists():
 @app.on_event("startup")
 def _startup() -> None:
     log.info("verirag.start", provider=settings.llm_provider,
-             qdrant=settings.qdrant_url,
+             qdrant=settings.qdrant_url or "embedded",
              answer_threshold=settings.confidence_answer_threshold,
              abstain_threshold=settings.confidence_abstain_threshold,
              max_attempts=settings.max_requery_attempts)
+
+    # Ephemeral cloud hosts start with an empty index; seed the demo corpus
+    # once on boot so the public URL is always live. No-op locally.
+    if settings.auto_seed:
+        try:
+            from app.ingestion.service import ingest_directory
+            from app.retrieval.store import get_store
+            if get_store().count() == 0:
+                results = ingest_directory(Path("data/raw"))
+                log.info("verirag.auto_seed", docs=len(results))
+        except Exception as exc:
+            log.error("verirag.auto_seed_failed", error=str(exc))
