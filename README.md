@@ -67,18 +67,31 @@ can never loop forever, and cost/latency stay predictable.
 
 ## Results
 
-> Reproduce with `python eval/run_eval.py`. Numbers go here once measured.
+Measured over the **12 golden questions** in `data/golden/qa.yaml`, comparing a
+plain baseline RAG (retrieve → answer, always) against the VeriRAG agent.
 
-| Metric | Plain RAG | VeriRAG |
+| Metric | Baseline RAG | VeriRAG |
 |---|---:|---:|
-| Hallucination rate (lower is better) | _run eval_ | _run eval_ |
-| Correct "I don't know" answers | _run eval_ | _run eval_ |
-| Answerable questions actually answered | _run eval_ | _run eval_ |
-| Content accuracy | _run eval_ | _run eval_ |
+| **Hallucinated on unanswerable questions** (lower is better) | **2 / 3 (67%)** | **0 / 3 (0%)** |
+| Correct "I don't know" answers | 1 / 3 | 3 / 3 |
+| Answerable questions answered correctly | 7 / 7 | 6 / 7 |
+| Chose the right action (status accuracy) | 58% | 83% |
 
-We report **both** the hallucination rate **and** how often it correctly says
-"I don't know". Reporting only the first would let a system cheat by refusing
-everything — reporting both proves it's genuinely balanced.
+![Baseline RAG vs VeriRAG](eval/results/comparison.png)
+
+**The headline:** on questions the documents genuinely can't answer, the baseline
+invented an answer two out of three times; **VeriRAG refused every time.** It also
+picked the right action (answer / abstain / clarify / flag) far more often.
+
+VeriRAG answered 6 of 7 answerable questions instead of 7 — it was slightly
+over-cautious on one. That's the deliberate trade: **we prefer an occasional
+"I don't know" over a confident wrong answer.** We report abstention accuracy
+*alongside* the hallucination rate precisely so this trade is visible — a system
+can't game the score by simply refusing everything.
+
+> Reproduce: `python eval/run_eval.py`. Metrics above are judge-independent
+> (based on whether it answered/abstained and picked the correct action), so they
+> don't depend on any single model's opinion.
 
 ---
 

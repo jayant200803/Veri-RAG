@@ -1,0 +1,474 @@
+{
+  "baseline": {
+    "name": "BASELINE RAG (no self-correction)",
+    "scores": [
+      {
+        "id": "Q01",
+        "category": "answerable_clean",
+        "question": "How many days per week must full-time employees be in the Bengaluru office?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 4816,
+        "answer": "According to Section 1 of the Employee Handbook (Revision 4.2), full-time employees are required to be present in the Bengaluru office a minimum of three (3) days per calendar week."
+      },
+      {
+        "id": "Q02",
+        "category": "answerable_clean",
+        "question": "How many casual leave days do full-time employees get per year?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 284,
+        "answer": "According to Section 2.1 of the Employee Handbook (Revision 4.2, effective 01 January 2026), full-time employees are entitled to eighteen (18) days of casual leave per calendar year, accrued monthly at 1.5 days."
+      },
+      {
+        "id": "Q03",
+        "category": "answerable_clean",
+        "question": "What is the deadline for submitting business travel expenses?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 18354,
+        "answer": "According to Section 5.1 of the Employee Handbook (employee_handbook.pdf, p1), business travel expenses must be submitted within thirty (30) days of the date the expense was incurred."
+      },
+      {
+        "id": "Q04",
+        "category": "answerable_clean",
+        "question": "How many days of unused casual leave can be carried forward?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 1325,
+        "answer": "According to Section 2.3 of the Employee Handbook (Revision 4.2, effective 01 January 2026), a maximum of six (6) days of unused casual leave may be carried forward into the following calendar year."
+      },
+      {
+        "id": "Q05",
+        "category": "answerable_ocr",
+        "question": "During which hours does the production deployment freeze apply on weekdays?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 8345,
+        "answer": "According to the scanned deployment memo (p1), the production deployment freeze applies between 22:00 and 06:00 IST on weekdays."
+      },
+      {
+        "id": "Q06",
+        "category": "answerable_ocr",
+        "question": "Are emergency hotfixes exempt from the deployment freeze?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 13515,
+        "answer": "Yes, emergency hotfixes are exempt from the deployment freeze. According to the internal memo from Priya Raghavan, VP Engineering, dated 04 February 2026, emergency hotfixes are exempt from the freeze but require verbal approval from the on-call engineering lead and must be recorded in the incident log within one hour."
+      },
+      {
+        "id": "Q07",
+        "category": "answerable_ocr",
+        "question": "How far in advance must deployment requests be raised?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 5353,
+        "answer": "According to the scanned deployment memo (p1), all deployment requests must be raised through the internal change management portal at least four hours before the intended deployment window."
+      },
+      {
+        "id": "Q08",
+        "category": "unanswerable",
+        "question": "What is the CEO's home address?",
+        "status": "success",
+        "expected_status": [
+          "abstain"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answered a question the corpus cannot support",
+        "status_correct": false,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 8314,
+        "answer": "I cannot provide the CEO's home address. Is there anything else I can help you with?"
+      },
+      {
+        "id": "Q09",
+        "category": "unanswerable",
+        "question": "Which health insurance provider does Northwind use and what is the coverage amount?",
+        "status": "success",
+        "expected_status": [
+          "abstain"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answered a question the corpus cannot support",
+        "status_correct": false,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 10507,
+        "answer": "Unfortunately, the provided context does not mention the health insurance provider used by Northwind or the coverage amount. The information provided is mainly related to employee policies, equipment, leave entitlements, and separation terms. \n\nHowever, it is possible that this information might be available in another document or section that is not provided in the given context. If you have access to the complete employee handbook or other relevant documents, you may be able to find this information."
+      },
+      {
+        "id": "Q10",
+        "category": "unanswerable",
+        "question": "What is the average software engineer salary at Northwind?",
+        "status": "success",
+        "expected_status": [
+          "abstain"
+        ],
+        "answered": false,
+        "hallucinated": false,
+        "hallucination_reason": "",
+        "status_correct": false,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 11453,
+        "answer": "Unfortunately, the provided context does not contain any information about the average software engineer salary at Northwind. The documents provided cover employee policies, remote work, leave entitlements, equipment, expense reimbursement, separation, and contractor engagement terms, but do not mention salaries."
+      },
+      {
+        "id": "Q11",
+        "category": "contradiction",
+        "question": "What is the notice period an employee must serve when resigning?",
+        "status": "success",
+        "expected_status": [
+          "abstain",
+          "clarify",
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": false,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 11402,
+        "answer": "According to Policy Addendum A-7, Item 1.1, the notice period applicable to resigning employees is thirty (30) calendar days."
+      },
+      {
+        "id": "Q12",
+        "category": "ambiguous",
+        "question": "How much leave am I entitled to?",
+        "status": "success",
+        "expected_status": [
+          "clarify",
+          "abstain"
+        ],
+        "answered": false,
+        "hallucinated": false,
+        "hallucination_reason": "",
+        "status_correct": false,
+        "content_hit": true,
+        "confidence": null,
+        "attempts": 0,
+        "latency_ms": 10751,
+        "answer": "To determine how much leave you are entitled to, we need to consider the information provided in the employee handbook and the policy addendum.\n\nFrom the employee handbook (Revision 4.2, effective 01 January 2026), we know that:\n\n- Full-time employees are entitled to 18 days of casual leave per calendar year, accrued monthly at 1.5 days.\n- Full-time employees are additionally entitled to 12 days of sick leave per calendar year.\n\nHowever, we also need to consider the policy addendum (A-7, issued 15 March 2026), which supersedes any conflicting provision published in earlier revisions of the Employee Handbook. According to the policy addendum:\n\n- Contractors are not covered by the leave entitlements set out in Section 2 of the Employee Handbook.\n- Contractors accrue leave in accordance with the terms of their individual statement of work. There is no company-wide contractor leave entitlement.\n\nSince you are not mentioned as a contractor, we will consider the leave entitlements for full-time employees. Therefore, you are entitled to:\n\n- 18 days of casual leave per calendar year\n- 12 days of sick leave per calendar year\n\nNote that sick leave does not carry forward, and a maximum of 6 days of unused casual leave may be carried forward into the following calendar year."
+      }
+    ],
+    "summary": {
+      "total_questions": 12,
+      "hallucinations": 10,
+      "hallucination_rate": 0.8333,
+      "correct_abstentions": "1/3",
+      "abstention_accuracy": 0.3333,
+      "answerable_answered": "7/7",
+      "answer_coverage": 1.0,
+      "content_accuracy": 1.0,
+      "status_accuracy": 0.5833,
+      "mean_latency_ms": 8701
+    }
+  },
+  "agent": {
+    "name": "VERIRAG AGENT (self-correcting)",
+    "scores": [
+      {
+        "id": "Q01",
+        "category": "answerable_clean",
+        "question": "How many days per week must full-time employees be in the Bengaluru office?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": 0.97,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "According to Section 1.1 of the Employee Handbook [source: employee_handbook.pdf, page: 1], full-time employees must be present in the Bengaluru office a minimum of three (3) days per calendar week."
+      },
+      {
+        "id": "Q02",
+        "category": "answerable_clean",
+        "question": "How many casual leave days do full-time employees get per year?",
+        "status": "abstain",
+        "expected_status": [
+          "success"
+        ],
+        "answered": false,
+        "hallucinated": false,
+        "hallucination_reason": "",
+        "status_correct": false,
+        "content_hit": true,
+        "confidence": 0.35,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "I don't have enough supporting evidence in the provided documents to answer this reliably, so I won't guess. My drafted answer contained claims I could not verify against the source documents."
+      },
+      {
+        "id": "Q03",
+        "category": "answerable_clean",
+        "question": "What is the deadline for submitting business travel expenses?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": 0.93,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "The deadline for submitting business travel expenses is within thirty (30) days of the date the expense was incurred [source: employee_handbook.pdf, page: 1]."
+      },
+      {
+        "id": "Q04",
+        "category": "answerable_clean",
+        "question": "How many days of unused casual leave can be carried forward?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": 0.829,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "According to Section 2.3 of the Employee Handbook [source: employee_handbook.pdf, page: 1], a maximum of six (6) days of unused casual leave may be carried forward into the following calendar year."
+      },
+      {
+        "id": "Q05",
+        "category": "answerable_ocr",
+        "question": "During which hours does the production deployment freeze apply on weekdays?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": 0.811,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "The production deployment freeze applies on weekdays between 22:00 and 06:00 IST [source: scanned_deployment_memo.png, page: 1]."
+      },
+      {
+        "id": "Q06",
+        "category": "answerable_ocr",
+        "question": "Are emergency hotfixes exempt from the deployment freeze?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": 0.98,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "According to the deployment memo [1], emergency hotfixes are exempt from the deployment freeze. However, they require verbal approval from the on-call engineering lead and must be recorded in the incident log within one hour. \n\nTherefore, the answer to the question is: Yes, emergency hotfixes are exempt from the deployment freeze."
+      },
+      {
+        "id": "Q07",
+        "category": "answerable_ocr",
+        "question": "How far in advance must deployment requests be raised?",
+        "status": "success",
+        "expected_status": [
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": true,
+        "hallucination_reason": "answer contained claims absent from retrieved sources",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": 0.714,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "According to the context, deployment requests must be raised at least four hours before the intended deployment window [source: scanned_deployment_memo.png, page: 1]."
+      },
+      {
+        "id": "Q08",
+        "category": "unanswerable",
+        "question": "What is the CEO's home address?",
+        "status": "abstain",
+        "expected_status": [
+          "abstain"
+        ],
+        "answered": false,
+        "hallucinated": false,
+        "hallucination_reason": "",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": 0.0,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "I don't have enough supporting evidence in the provided documents to answer this reliably, so I won't guess. The context does not mention the CEO's home address at all."
+      },
+      {
+        "id": "Q09",
+        "category": "unanswerable",
+        "question": "Which health insurance provider does Northwind use and what is the coverage amount?",
+        "status": "abstain",
+        "expected_status": [
+          "abstain"
+        ],
+        "answered": false,
+        "hallucinated": false,
+        "hallucination_reason": "",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": 0.0,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "I don't have enough supporting evidence in the provided documents to answer this reliably, so I won't guess. The context does not mention health insurance provider or coverage amount."
+      },
+      {
+        "id": "Q10",
+        "category": "unanswerable",
+        "question": "What is the average software engineer salary at Northwind?",
+        "status": "abstain",
+        "expected_status": [
+          "abstain"
+        ],
+        "answered": false,
+        "hallucinated": false,
+        "hallucination_reason": "",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": 0.0,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "I don't have enough supporting evidence in the provided documents to answer this reliably, so I won't guess. The context does not mention software engineer salaries at all."
+      },
+      {
+        "id": "Q11",
+        "category": "contradiction",
+        "question": "What is the notice period an employee must serve when resigning?",
+        "status": "success",
+        "expected_status": [
+          "abstain",
+          "clarify",
+          "success"
+        ],
+        "answered": true,
+        "hallucinated": false,
+        "hallucination_reason": "",
+        "status_correct": false,
+        "content_hit": true,
+        "confidence": 0.977,
+        "attempts": 0,
+        "latency_ms": null,
+        "answer": "According to the policy addendum A-7, the notice period an employee must serve when resigning is thirty (30) calendar days [source: policy_addendum_a7.pdf, page: 1]."
+      },
+      {
+        "id": "Q12",
+        "category": "ambiguous",
+        "question": "How much leave am I entitled to?",
+        "status": "abstain",
+        "expected_status": [
+          "clarify",
+          "abstain"
+        ],
+        "answered": false,
+        "hallucinated": false,
+        "hallucination_reason": "",
+        "status_correct": true,
+        "content_hit": true,
+        "confidence": 0.35,
+        "attempts": 1,
+        "latency_ms": null,
+        "answer": "I don't have enough supporting evidence in the provided documents to answer this reliably, so I won't guess. My drafted answer contained claims I could not verify against the source documents."
+      }
+    ],
+    "summary": {
+      "total_questions": 12,
+      "hallucinations": 6,
+      "hallucination_rate": 0.5,
+      "correct_abstentions": "3/3",
+      "abstention_accuracy": 1.0,
+      "answerable_answered": "6/7",
+      "answer_coverage": 0.8571,
+      "content_accuracy": 0.8571,
+      "status_accuracy": 0.8333,
+      "mean_latency_ms": null
+    }
+  }
+}
