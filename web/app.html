@@ -126,7 +126,50 @@
   .toast span{color:var(--muted);font-size:.78rem}
 
   footer{text-align:center;padding:44px 0 34px;color:var(--dim);font-size:.8rem}
-  @media(max-width:640px){.nav-pills .pill.hideable{display:none}}
+  /* toolbar: compare toggle + demo button */
+  .toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px}
+  .switch{display:inline-flex;align-items:center;gap:9px;font-size:.82rem;color:var(--muted);cursor:pointer;user-select:none}
+  .switch input{display:none}
+  .track{width:38px;height:21px;border-radius:99px;background:rgba(255,255,255,.12);position:relative;transition:.2s;flex-shrink:0}
+  .track::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.2s}
+  .switch input:checked + .track{background:var(--violet)}
+  .switch input:checked + .track::after{transform:translateX(17px)}
+  .demo-btn{margin-left:auto;font:inherit;font-size:.82rem;font-weight:600;color:var(--violet2);background:rgba(139,92,246,.1);border:1px solid var(--line2);padding:8px 15px;border-radius:10px;cursor:pointer;transition:.15s}
+  .demo-btn:hover{background:rgba(139,92,246,.2);color:#fff}
+  .demo-btn:disabled{opacity:.5;cursor:default}
+
+  /* animated agent loop */
+  .loop{display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-top:18px;padding:14px 16px;background:var(--panel2);border:1px solid var(--line);border-radius:14px}
+  .loop-node{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;font-weight:600;color:var(--dim);padding:7px 13px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.02);opacity:.55;transition:.3s;transform:translateY(0)}
+  .loop-node .lic{font-size:.95rem;filter:grayscale(1)}
+  .loop-node.active{opacity:1;color:#fff;border-color:var(--violet);background:rgba(139,92,246,.18);box-shadow:0 0 0 4px rgba(139,92,246,.14);transform:translateY(-2px)}
+  .loop-node.active .lic{filter:none}
+  .loop-node.done{opacity:1;color:var(--emerald);border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08)}
+  .loop-node.done .lic{filter:none}
+  .loop-node.final.done{color:var(--violet2);border-color:var(--violet);background:rgba(139,92,246,.14)}
+  .loop-arrow{color:var(--dim);font-size:.85rem}
+
+  /* side-by-side compare */
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px;animation:rise .4s ease}
+  .cmp-col{display:flex;flex-direction:column;gap:0}
+  .cmp-head{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;border-radius:12px 12px 0 0;border:1px solid var(--line);border-bottom:none}
+  .cmp-head.base{color:var(--muted);background:rgba(148,163,184,.08)}
+  .cmp-head.veri{color:var(--violet2);background:rgba(139,92,246,.12)}
+  .cmp .card{border-radius:0 0 16px 16px;animation:none}
+  .cmp .verdict{padding:14px 16px}
+  .cmp .body{padding:14px 16px}
+  .cmp .answer{font-size:.94rem}
+  .missing{margin-top:12px;border-top:1px solid var(--line);padding-top:11px;display:flex;flex-direction:column;gap:6px}
+  .missing .m{font-size:.76rem;color:var(--dim);display:flex;align-items:center;gap:7px}
+  .missing .m::before{content:"✕";color:var(--rose);font-weight:800;font-size:.7rem}
+  .cmp-note{margin-top:12px;font-size:.82rem;color:var(--muted);background:rgba(139,92,246,.07);border:1px solid var(--line2);border-left:3px solid var(--violet);border-radius:10px;padding:11px 14px}
+  .base-card{border:1px solid var(--line);border-radius:0 0 16px 16px;background:var(--panel)}
+  .base-verdict{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .base-verdict .vico{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:rgba(148,163,184,.14)}
+  .base-verdict .vlabel{font-size:.9rem;font-weight:800;color:var(--muted)}
+  .base-verdict .vmeta{font-size:.72rem;color:var(--dim);margin-top:2px}
+
+  @media(max-width:640px){.nav-pills .pill.hideable{display:none}.cmp{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -162,6 +205,17 @@
       <span class="chip" data-q="What is the CEO's home address?"><span class="em">🛑</span>Not in docs</span>
     </div>
 
+    <div class="toolbar">
+      <label class="switch">
+        <input type="checkbox" id="cmp-toggle"/>
+        <span class="track"></span>
+        <span>Compare with plain RAG (side-by-side)</span>
+      </label>
+      <button class="demo-btn" id="demo-btn">▶ Run demo sequence</button>
+    </div>
+
+    <div class="loop" id="loop"></div>
+
     <div class="drop" id="drop">
       <div class="di">📄⬆️</div>
       <p><b>Add your own documents</b> — drop PDFs or images here, or click to browse</p>
@@ -186,6 +240,7 @@ const VERDICT = {
 };
 const esc=s=>(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const $=id=>document.getElementById(id);
+let compareMode=false;
 
 function toast(t,m,k=""){const e=document.createElement("div");e.className="toast "+k;e.innerHTML=`<b>${esc(t)}</b><span>${esc(m)}</span>`;$("toast").appendChild(e);setTimeout(()=>{e.style.opacity="0";e.style.transition="opacity .4s";setTimeout(()=>e.remove(),400);},3600);}
 
@@ -204,7 +259,7 @@ function gauge(pct,color){
     <svg width="58" height="58"><circle cx="29" cy="29" r="${r}" stroke="rgba(255,255,255,.08)" stroke-width="6" fill="none"/>
     <circle cx="29" cy="29" r="${r}" stroke="${color}" stroke-width="6" fill="none" stroke-linecap="round"
       stroke-dasharray="${c}" stroke-dashoffset="${c}" style="transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)"
-      class="gring"/></svg>
+      class="gring" data-pct="${pct}"/></svg>
     <div class="num">${pct}%</div></div>`;
 }
 
@@ -257,22 +312,134 @@ function render(d){
   </div>`;
 }
 
+function animateGauges(scope){
+  requestAnimationFrame(()=>{(scope||document).querySelectorAll(".gring").forEach(g=>{
+    const r=24,c=2*Math.PI*r,pct=+g.dataset.pct||0;
+    g.style.strokeDashoffset=c*(1-pct/100);
+  });});
+}
+
+/* ---- animated agent loop: lights up the nodes the agent actually ran ---- */
+const LOOP_META={
+  retrieve:{ic:"🔍",name:"Retrieve"},
+  grade_context:{ic:"⚖️",name:"Grade"},
+  rewrite_query:{ic:"🔁",name:"Re-query"},
+  generate:{ic:"✍️",name:"Generate"},
+  verify_faithfulness:{ic:"🔬",name:"Verify"},
+  clarify:{ic:"❓",name:"Clarify"},
+  abstain:{ic:"🛑",name:"Abstain"},
+};
+function animateLoop(trace){
+  const el=$("loop");
+  const nodes=(trace||[]).map(t=>t.node);
+  if(!nodes.length){el.style.display="none";return Promise.resolve();}
+  el.style.display="flex";
+  el.innerHTML=nodes.map((n,i)=>{
+    const m=LOOP_META[n]||{ic:"•",name:n};
+    const last=i===nodes.length-1?" final":"";
+    return `${i?'<span class="loop-arrow">→</span>':''}<span class="loop-node${last}"><span class="lic">${m.ic}</span>${m.name}</span>`;
+  }).join("");
+  const els=[...el.querySelectorAll(".loop-node")];
+  return new Promise(res=>{
+    els.forEach((n,i)=>setTimeout(()=>{
+      n.classList.add("active");
+      setTimeout(()=>{n.classList.remove("active");n.classList.add("done");},300);
+      if(i===els.length-1) setTimeout(res,320);
+    },i*380));
+  });
+}
+
+/* ---- plain-RAG (baseline) card for the side-by-side ---- */
+function renderBaseline(d){
+  return `<div class="cmp-col">
+    <div class="cmp-head base">Plain RAG (baseline)</div>
+    <div class="base-card">
+      <div class="base-verdict">
+        <div class="vico">💬</div>
+        <div><div class="vlabel">ANSWERED (always)</div>
+        <div class="vmeta">${d.latency_ms} ms · no self-checks</div></div>
+      </div>
+      <div class="body">
+        <div class="answer">${esc(d.answer)}</div>
+        ${srcHTML(d.sources)?`<details><summary>sources (${(d.sources||[]).length})</summary>${srcHTML(d.sources)}</details>`:""}
+        <div class="missing">
+          <span class="m">No confidence score</span>
+          <span class="m">No self-verification of the answer</span>
+          <span class="m">No way to abstain — always returns "success"</span>
+          <span class="m">Cannot detect contradictory sources</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function renderCompare(agent,base){
+  let note="VeriRAG grades its evidence and can refuse, flag conflicts, or ask to clarify. Plain RAG just answers.";
+  if(agent.contradiction) note="Plain RAG picked one value and hid the conflict. VeriRAG detected that the sources disagree and flagged it.";
+  else if(agent.status==="abstain") note="Plain RAG has no mechanism to abstain — VeriRAG explicitly refused because the evidence wasn't there.";
+  else if(agent.status==="clarify") note="The question was ambiguous. Plain RAG guessed; VeriRAG asked for the missing detail.";
+  return `<div>
+    <div class="cmp">
+      ${renderBaseline(base)}
+      <div class="cmp-col">
+        <div class="cmp-head veri">VeriRAG (self-correcting)</div>
+        ${render(agent)}
+      </div>
+    </div>
+    <div class="cmp-note">💡 ${esc(note)}</div>
+  </div>`;
+}
+
 async function ask(){
   const q=$("q").value.trim(); if(!q) return;
   const out=$("out");
   out.insertAdjacentHTML("afterbegin",`<div class="thinking"><span class="spin"></span> agent is retrieving and grading evidence…</div>`);
   try{
-    const r=await fetch("/api/query",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q,include_trace:true})});
-    const d=await r.json();
-    if(!r.ok) throw new Error(d.detail||"request failed");
-    out.querySelector(".thinking")?.remove();
-    out.insertAdjacentHTML("afterbegin",render(d));
-    // animate gauge
-    requestAnimationFrame(()=>{const g=out.querySelector(".card .gring");if(g){const r=24,c=2*Math.PI*r;const pct=Math.round((d.confidence||0)*100);g.style.strokeDashoffset=c*(1-pct/100);}});
+    if(compareMode){
+      const [ra,rb]=await Promise.all([
+        fetch("/api/query",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q,include_trace:true})}),
+        fetch("/api/query/baseline",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q})}),
+      ]);
+      const agent=await ra.json(), base=await rb.json();
+      if(!ra.ok) throw new Error(agent.detail||"request failed");
+      await animateLoop(agent.trace);
+      out.querySelector(".thinking")?.remove();
+      const wrap=document.createElement("div");
+      wrap.innerHTML=renderCompare(agent, rb.ok?base:{answer:"(baseline unavailable)",sources:[],latency_ms:0});
+      out.prepend(wrap.firstElementChild);
+      animateGauges(out);
+    }else{
+      const r=await fetch("/api/query",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q,include_trace:true})});
+      const d=await r.json();
+      if(!r.ok) throw new Error(d.detail||"request failed");
+      await animateLoop(d.trace);
+      out.querySelector(".thinking")?.remove();
+      out.insertAdjacentHTML("afterbegin",render(d));
+      animateGauges(out);
+    }
   }catch(e){
     out.querySelector(".thinking")?.remove();
     out.insertAdjacentHTML("afterbegin",`<div class="card s-error"><div class="verdict"><div class="vico">⚠</div><div class="vtxt"><div class="vlabel">REQUEST FAILED</div></div></div><div class="body"><div class="answer" style="font-size:.9rem">${esc(e.message)}</div></div></div>`);
   }
+}
+
+/* ---- hands-free demo sequence ---- */
+const DEMO_QS=[
+  "How many casual leave days do full-time employees get?",
+  "When does the production deployment freeze apply?",
+  "What is the notice period when resigning?",
+  "What is the CEO's home address?",
+];
+let demoRunning=false;
+async function runDemo(){
+  if(demoRunning) return;
+  demoRunning=true;
+  const btn=$("demo-btn"); btn.disabled=true; const label=btn.textContent;
+  for(const q of DEMO_QS){
+    $("q").value=q;
+    await ask();
+    await new Promise(r=>setTimeout(r,2600));
+  }
+  btn.disabled=false; btn.textContent=label; demoRunning=false;
 }
 
 /* upload */
@@ -309,6 +476,8 @@ async function poll(id){
 $("ask").onclick=ask;
 $("q").addEventListener("keydown",e=>{if(e.key==="Enter")ask();});
 $("chips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("q").value=c.dataset.q;ask();});
+$("cmp-toggle").addEventListener("change",e=>{compareMode=e.target.checked;});
+$("demo-btn").onclick=runDemo;
 const drop=$("drop"),file=$("file");
 drop.onclick=()=>file.click();
 file.onchange=()=>{upload(file.files);file.value="";};

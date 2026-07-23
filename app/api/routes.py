@@ -102,6 +102,24 @@ def query(req: QueryRequest) -> QueryResponse:
     return QueryResponse(**result)
 
 
+@router.post("/query/baseline")
+def query_baseline(req: QueryRequest) -> dict:
+    """Run the *plain* baseline RAG (retrieve -> generate, always answers).
+
+    Exposed so the UI can show a live side-by-side against the agent: this is
+    the control group VeriRAG is measured against, and seeing it hallucinate
+    next to VeriRAG abstaining is the whole point of the project.
+    """
+    from eval.baseline_rag import run_baseline
+
+    try:
+        return run_baseline(req.query)
+    except Exception as exc:
+        log.error("baseline.failed", error=str(exc))
+        raise HTTPException(status_code=503,
+                            detail=f"Baseline unavailable: {exc}") from exc
+
+
 @router.delete("/index")
 def reset_index() -> dict:
     get_store().reset()
